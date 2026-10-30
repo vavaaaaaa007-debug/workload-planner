@@ -1,0 +1,40 @@
+name: build
+on:
+  workflow_dispatch:      # 在 Actions 页面可手动点运行
+  push:
+    tags: ['v*']          # 推送 v1.0.0 这类标签时自动打包
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest      # Apple 芯片 Mac
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest      # Intel Mac
+            args: --target x86_64-apple-darwin
+          - platform: windows-latest
+            args: ''
+    runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+      - run: npm install
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: '工作量助手 v__VERSION__'
+          releaseDraft: true
+          args: ${{ matrix.args }}
