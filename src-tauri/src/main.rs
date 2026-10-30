@@ -43,7 +43,7 @@ fn data_file(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     // Windows: %LOCALAPPDATA%\WorkloadPlanner\data.json
     let dir = app
         .path()
-        .data_local_dir()
+        .local_data_dir()
         .map_err(|e| e.to_string())?
         .join("WorkloadPlanner");
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
